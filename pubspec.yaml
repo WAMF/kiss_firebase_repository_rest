@@ -1,5 +1,5 @@
 name: kiss_firebase_repository_rest
-description: A starting point for Dart libraries or applications.
+description: A lightweight, type-safe Firestore implementation of the KISS Repository pattern for Dart using the Google Cloud Firestore REST API
 version: 0.0.1
 repository: https://github.com/leehiggins/kiss_firebase_repository_rest
 
