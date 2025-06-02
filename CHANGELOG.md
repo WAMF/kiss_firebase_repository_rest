@@ -1,6 +1,7 @@
 ## 0.1.0
 
 - Update to new interface
+- Added tests with firebase emulators
 
 ## 0.0.2
 
