@@ -79,29 +79,41 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   }
 
   @override
-  Future<T> add(T item) async {
-    final id = _createId();
-    return addWithId(id, item);
-  }
-
-  @override
-  Future<T> addWithId(String id, T item) async {
+  Future<T> add(IdentifiedObject<T> item) async {
     try {
-      final document = _toFirestore(item, id);
+      final document = _toFirestore(item.object, item.id);
       document.name = null;
       final parent =
           collectionParentPath.isEmpty
               ? documentsPath
               : '$documentsPath/$collectionParentPath';
       final createdDocument = await _firestore.projects.databases.documents
-          .createDocument(document, parent, collectionId, documentId: id);
+          .createDocument(document, parent, collectionId, documentId: item.id);
       return _fromFirestore(createdDocument);
     } catch (e) {
       if (e is DetailedApiRequestError && e.status == 409) {
-        throw RepositoryException.alreadyExists(id);
+        throw RepositoryException.alreadyExists(item.id);
       }
       rethrow;
     }
+  }
+
+  @override
+  IdentifiedObject<T> autoIdentify(
+    T item, {
+    T Function(T, String)? updateObjectWithId,
+  }) {
+    final id = _createId();
+    final updatedItem = updateObjectWithId?.call(item, id) ?? item;
+    return IdentifiedObject(id, updatedItem);
+  }
+
+  @override
+  Future<T> addAutoIdentified(
+    T item, {
+    T Function(T, String)? updateObjectWithId,
+  }) async {
+    return add(autoIdentify(item, updateObjectWithId: updateObjectWithId));
   }
 
   @override
@@ -258,33 +270,40 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   }
 
   @override
-  Future<Iterable<T>> addAll(Object items) {
-    // TODO: implement addAll
-    throw UnimplementedError();
+  Future<Iterable<T>> addAll(Iterable<IdentifiedObject<T>> items) async {
+    return Future.wait(items.map((e) => add(e)));
   }
 
   @override
-  Future<void> deleteAll(Iterable<String> ids) {
-    // TODO: implement deleteAll
-    throw UnimplementedError();
+  Future<void> deleteAll(Iterable<String> ids) async {
+    await Future.wait(ids.map((e) => delete(e)));
   }
 
   @override
   Stream<T> stream(String id) {
-    // TODO: implement stream
-    throw UnimplementedError();
+    // REST API does not support streaming, but we can return a stream of one item
+    //warn about this
+    print('Warning: Streaming is not supported for REST API');
+    return Stream.fromFuture(get(id));
   }
 
   @override
   Stream<List<T>> streamQuery({Query query = const AllQuery()}) {
-    // TODO: implement streamQuery
-    throw UnimplementedError();
+    // REST API does not support streaming queries
+    print('Warning: Streaming queries are not supported for REST API');
+    return Stream.fromFuture(this.query(query: query));
   }
 
   @override
-  Future<Iterable<T>> updateAll(Iterable<IdentifedObject<T>> items) {
-    // TODO: implement updateAll
-    throw UnimplementedError();
+  Future<Iterable<T>> updateAll(Iterable<IdentifiedObject<T>> items) async {
+    return Future.wait(
+      items.map((e) => update(e.id, (existingItem) => e.object)),
+    );
+  }
+
+  @override
+  void dispose() {
+    // nothing to do
   }
 }
 
