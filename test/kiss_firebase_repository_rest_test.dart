@@ -199,6 +199,7 @@ void main() {
 
       test('should handle complex JSON document lifecycle', () async {
         final complexDoc = {
+          'id': 'complex-1',
           'title': 'Complex Document',
           'metadata': {
             'author': 'Test Author',

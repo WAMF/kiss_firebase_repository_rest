@@ -183,13 +183,10 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
     );
   }
 
-  static Map<String, dynamic> toJson(Document document, {String? idField}) {
+  static Map<String, dynamic> toJson(Document document) {
     final value = fromDocumentValue(
       Value(mapValue: MapValue(fields: document.fields)),
     );
-    if (idField != null) {
-      return {...value as Map<String, dynamic>, idField: document.name};
-    }
     return value as Map<String, dynamic>;
   }
 

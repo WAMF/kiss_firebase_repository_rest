@@ -240,7 +240,10 @@ void main() {
             email: 'user$i@example.com',
           );
 
-          final identified = repository.autoIdentify(user);
+          final identified = repository.autoIdentify(
+            user,
+            updateObjectWithId: (user, id) => user.copyWith(id: id),
+          );
           expect(identified.id.length, equals(20));
           expect(ids.add(identified.id), isTrue); // Should be unique
         }

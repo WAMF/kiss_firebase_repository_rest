@@ -134,13 +134,19 @@ void main() {
           'timestamp': DateTime.now().toIso8601String(),
         };
 
-        final addedDoc = await repository.addAutoIdentified(data);
+        final addedDoc = await repository.addAutoIdentified(
+          data,
+          updateObjectWithId: (doc, id) => {...doc, 'id': id},
+        );
 
         expect(addedDoc['type'], equals('auto-generated'));
 
         // Verify the document was actually saved with auto-generated ID
-        final autoId = repository.autoIdentify(data).id;
-        expect(autoId.length, equals(20));
+        final autoId = addedDoc['id'];
+
+        //fetch the document
+        final fetchedDoc = await repository.get(autoId);
+        expect(fetchedDoc['type'], equals('auto-generated'));
       });
 
       test('should query multiple JSON documents', () async {
