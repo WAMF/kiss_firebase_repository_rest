@@ -19,7 +19,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  kiss_firebase_repository_rest: ^0.0.2
+  kiss_firebase_repository_rest: ^0.1.0
 ```
 
 ## Quick Start
