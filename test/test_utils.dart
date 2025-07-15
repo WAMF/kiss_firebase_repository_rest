@@ -1,7 +1,8 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart' as http;
-import 'package:kiss_repository/kiss_repository.dart';
 import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
+import 'package:kiss_repository/kiss_repository.dart';
+
 import 'test_models.dart';
 
 /// Test utilities for Firebase emulator setup
@@ -17,7 +18,7 @@ class TestUtils {
     final httpClient = http.Client();
 
     // Override the base URL to point to emulator
-    final emulatorUrl = 'http://$emulatorHost:$emulatorPort';
+    const emulatorUrl = 'http://$emulatorHost:$emulatorPort';
 
     return FirestoreApi(httpClient, rootUrl: '$emulatorUrl/');
   }
@@ -64,8 +65,8 @@ class TestUtils {
         print('Warning: Failed to clear emulator data: ${response.statusCode}');
       }
       // Add a small delay to ensure the operation completes
-      await Future.delayed(const Duration(milliseconds: 100));
-    } catch (e) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    } on Exception catch (e) {
       print('Warning: Could not clear emulator data: $e');
     }
   }
@@ -77,7 +78,7 @@ class TestUtils {
           .get(Uri.parse('http://$emulatorHost:$emulatorPort/'))
           .timeout(const Duration(seconds: 2));
       return response.statusCode == 200;
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -92,7 +93,7 @@ class TestUtils {
       if (await isEmulatorRunning()) {
         return;
       }
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
 
     throw Exception(
@@ -108,7 +109,7 @@ class TestUtils {
         name: 'John Doe',
         email: 'john@example.com',
         age: 30,
-        createdAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024),
       ),
       User(
         id: 'user2',

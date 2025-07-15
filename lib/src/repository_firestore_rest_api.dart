@@ -1,11 +1,16 @@
-import 'package:googleapis/firestore/v1.dart';
-import 'package:kiss_repository/kiss_repository.dart';
 import 'dart:math';
 
+import 'package:googleapis/firestore/v1.dart';
+import 'package:kiss_repository/kiss_repository.dart';
+
+/// A function that converts an item of type T to a Firestore Document.
 typedef ToFirestore<T> = Document Function(T item, String? id);
+/// A function that converts a Firestore Document to an item of type T.
 typedef FromFirestore<T> = T Function(Document document);
 
+/// A repository implementation that uses the Firestore REST API for data persistence.
 class RepositoryFirestoreRestApi<T> extends Repository<T> {
+  /// Creates a new RepositoryFirestoreRestApi instance.
   RepositoryFirestoreRestApi({
     required String projectId,
     required String? database,
@@ -29,15 +34,19 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   final FromFirestore<T> _fromFirestore;
   final QueryBuilder<RunQueryRequest> _queryBuilder;
   final String Function() _createId;
+  /// Returns the base path for documents in the Firestore database.
   String get documentsPath => '$_database/documents';
 
+  /// Returns the collection ID from the path.
   String get collectionId => _path.split('/').last;
 
+  /// Returns the parent path of the collection.
   String get collectionParentPath {
     final lastSlashIndex = _path.lastIndexOf('/');
     return lastSlashIndex == -1 ? '' : _path.substring(0, lastSlashIndex);
   }
 
+  /// Generates a default random ID for new documents.
   static String defaultCreateId() {
     const chars =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -81,8 +90,8 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   @override
   Future<T> add(IdentifiedObject<T> item) async {
     try {
-      final document = _toFirestore(item.object, item.id);
-      document.name = null;
+      final document = _toFirestore(item.object, item.id)
+        ..name = null;
       final parent =
           collectionParentPath.isEmpty
               ? documentsPath
@@ -176,6 +185,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
         .toList();
   }
 
+  /// Converts a JSON map to a Firestore Document.
   static Document fromJson({required Map<String, dynamic> json, String? id}) {
     return Document(
       name: id,
@@ -183,6 +193,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
     );
   }
 
+  /// Converts a Firestore Document to a JSON map.
   static Map<String, dynamic> toJson(Document document) {
     final value = fromDocumentValue(
       Value(mapValue: MapValue(fields: document.fields)),
@@ -190,6 +201,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
     return value as Map<String, dynamic>;
   }
 
+  /// Converts a JSON value to a Firestore Value.
   static Value toDocumentValue(dynamic jsonValue) {
     if (jsonValue == null) {
       return Value(nullValue: 'NULL_VALUE');
@@ -226,6 +238,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
     throw ArgumentError('Unsupported type: ${jsonValue.runtimeType}');
   }
 
+  /// Converts a Firestore Value to a JSON value.
   static dynamic fromDocumentValue(Value value) {
     if (value.nullValue != null) {
       return null;
@@ -268,12 +281,12 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
 
   @override
   Future<Iterable<T>> addAll(Iterable<IdentifiedObject<T>> items) async {
-    return Future.wait(items.map((e) => add(e)));
+    return Future.wait(items.map(add));
   }
 
   @override
   Future<void> deleteAll(Iterable<String> ids) async {
-    await Future.wait(ids.map((e) => delete(e)));
+    await Future.wait(ids.map(delete));
   }
 
   @override
@@ -304,8 +317,10 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   }
 }
 
+/// A specialized repository implementation for JSON documents in Firestore.
 class RepositoryFirestoreJsonRestApi
     extends RepositoryFirestoreRestApi<Map<String, dynamic>> {
+  /// Creates a new RepositoryFirestoreJsonRestApi instance.
   RepositoryFirestoreJsonRestApi({
     required super.projectId,
     required super.firestore,

@@ -1,8 +1,9 @@
-import 'package:test/test.dart';
-import 'package:kiss_repository/kiss_repository.dart';
 import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
-import 'test_utils.dart';
+import 'package:kiss_repository/kiss_repository.dart';
+import 'package:test/test.dart';
+
 import 'test_models.dart';
+import 'test_utils.dart';
 
 void main() {
   group('Firebase Repository Integration Tests', () {
@@ -50,7 +51,7 @@ void main() {
           name: 'Test User',
           email: 'test@example.com',
           age: 28,
-          createdAt: DateTime(2024, 1, 1),
+          createdAt: DateTime(2024),
         );
 
         // Add user
@@ -121,7 +122,7 @@ void main() {
         );
 
         // Test auto-identified user addition
-        final autoUser = User(
+        const autoUser = User(
           id: '',
           name: 'Auto User',
           email: 'auto@example.com',
@@ -153,7 +154,7 @@ void main() {
         );
 
         // Test already exists error
-        final user = User(
+        const user = User(
           id: 'duplicate-test',
           name: 'Duplicate User',
           email: 'duplicate@example.com',
@@ -220,7 +221,8 @@ void main() {
           IdentifiedObject('complex-1', complexDoc),
         );
         expect(addedDoc['title'], equals('Complex Document'));
-        expect(addedDoc['metadata']['author'], equals('Test Author'));
+        final metadata = addedDoc['metadata'] as Map<String, dynamic>;
+        expect(metadata['author'], equals('Test Author'));
 
         // Update document
         final updatedDoc = await jsonRepo.update('complex-1', (doc) {
@@ -236,7 +238,9 @@ void main() {
           };
         });
 
-        expect(updatedDoc['metadata']['stats']['views'], equals(10));
+        final updatedMetadata = updatedDoc['metadata'] as Map<String, dynamic>;
+        final updatedStats = updatedMetadata['stats'] as Map<String, dynamic>;
+        expect(updatedStats['views'], equals(10));
         expect(updatedDoc['updated'], isNotNull);
 
         // Query and verify
@@ -259,7 +263,7 @@ void main() {
 
       test('should handle multiple concurrent operations', () async {
         // Create base user
-        final baseUser = User(
+        const baseUser = User(
           id: 'concurrent-user',
           name: 'Concurrent User',
           email: 'concurrent@example.com',
@@ -274,7 +278,7 @@ void main() {
             return userRepo.update('concurrent-user', (user) {
               return user.copyWith(age: (user.age ?? 0) + 1);
             });
-          } catch (e) {
+          } on Exception {
             // Some updates may fail due to concurrent modifications
             return null;
           }
@@ -296,7 +300,7 @@ void main() {
         final stopwatch = Stopwatch()..start();
 
         // Create multiple users
-        for (int i = 0; i < batchSize; i++) {
+        for (var i = 0; i < batchSize; i++) {
           final user = User(
             id: 'batch-user-$i',
             name: 'Batch User $i',
@@ -325,7 +329,7 @@ void main() {
               return aNum.compareTo(bNum);
             });
 
-        for (int i = 0; i < batchSize; i++) {
+        for (var i = 0; i < batchSize; i++) {
           expect(sortedUsers[i].name, equals('Batch User $i'));
           expect(sortedUsers[i].age, equals(20 + i));
         }

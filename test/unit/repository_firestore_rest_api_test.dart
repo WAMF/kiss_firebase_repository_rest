@@ -1,8 +1,9 @@
-import 'package:test/test.dart';
-import 'package:kiss_repository/kiss_repository.dart';
 import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
-import '../test_utils.dart';
+import 'package:kiss_repository/kiss_repository.dart';
+import 'package:test/test.dart';
+
 import '../test_models.dart';
+import '../test_utils.dart';
 
 void main() {
   group('RepositoryFirestoreRestApi Unit Tests', () {
@@ -70,7 +71,7 @@ void main() {
       );
 
       test('should auto-identify and add user', () async {
-        final user = User(
+        const user = User(
           id: '',
           name: 'Auto User',
           email: 'auto@example.com',
@@ -89,7 +90,7 @@ void main() {
       });
 
       test('should update existing user', () async {
-        final user = User(
+        const user = User(
           id: 'update-user',
           name: 'Original Name',
           email: 'original@example.com',
@@ -128,7 +129,7 @@ void main() {
       );
 
       test('should delete user', () async {
-        final user = User(
+        const user = User(
           id: 'delete-user',
           name: 'Delete Me',
           email: 'delete@example.com',
@@ -158,7 +159,7 @@ void main() {
       });
 
       test('should handle already exists error', () async {
-        final user = User(
+        const user = User(
           id: 'duplicate-user',
           name: 'Duplicate User',
           email: 'duplicate@example.com',
@@ -233,7 +234,7 @@ void main() {
       test('should generate unique IDs', () async {
         final ids = <String>{};
 
-        for (int i = 0; i < 10; i++) {
+        for (var i = 0; i < 10; i++) {
           final user = User(
             id: '',
             name: 'User $i',
@@ -250,7 +251,7 @@ void main() {
       });
 
       test('should update object with ID when provided', () async {
-        final user = User(id: '', name: 'Test User', email: 'test@example.com');
+        const user = User(id: '', name: 'Test User', email: 'test@example.com');
 
         final identified = repository.autoIdentify(
           user,
@@ -271,7 +272,7 @@ void main() {
           'active': true,
           'tags': ['developer', 'tester'],
           'metadata': {'department': 'Engineering', 'level': 'Senior'},
-          'joinDate': DateTime(2024, 1, 1).toIso8601String(),
+          'joinDate': DateTime(2024).toIso8601String(),
         };
 
         final document = RepositoryFirestoreRestApi.fromJson(
@@ -289,8 +290,9 @@ void main() {
         expect(convertedJson['age'], equals(25));
         expect(convertedJson['active'], equals(true));
         expect(convertedJson['tags'], equals(['developer', 'tester']));
-        expect(convertedJson['metadata']['department'], equals('Engineering'));
-        expect(convertedJson['metadata']['level'], equals('Senior'));
+        final metadata = convertedJson['metadata'] as Map<String, dynamic>;
+        expect(metadata['department'], equals('Engineering'));
+        expect(metadata['level'], equals('Senior'));
       });
 
       test('should handle null values in conversion', () async {

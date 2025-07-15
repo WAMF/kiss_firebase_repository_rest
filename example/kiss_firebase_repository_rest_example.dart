@@ -1,5 +1,5 @@
-import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
 import 'package:googleapis/firestore/v1.dart';
+import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
 
 void main() async {
   const serviceAccountJson = '''

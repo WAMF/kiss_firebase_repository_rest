@@ -31,7 +31,7 @@ class EmulatorTestRunner {
       print('✅ Firebase emulator started successfully');
       print('🌐 Emulator UI available at: http://127.0.0.1:4000');
       print('🔥 Firestore emulator available at: http://127.0.0.1:8080');
-    } catch (e) {
+    } on ProcessException catch (e) {
       print('❌ Failed to start Firebase emulator: $e');
       print('💡 Make sure Firebase CLI is installed and configured');
       print('💡 Run: npm install -g firebase-tools');
@@ -51,7 +51,7 @@ class EmulatorTestRunner {
   }
 
   /// Runs tests with automatic emulator management
-  static Future<void> runTests(Function() testFunction) async {
+  static Future<void> runTests(void Function() testFunction) async {
     try {
       await startEmulator();
 
@@ -81,7 +81,7 @@ void main() async {
       throw Exception('Firebase CLI not found');
     }
     print('🔧 Firebase CLI version: ${result.stdout.toString().trim()}');
-  } catch (e) {
+  } on ProcessException {
     print('❌ Firebase CLI is not installed or not in PATH');
     print('💡 Install with: npm install -g firebase-tools');
     exit(1);
@@ -161,7 +161,7 @@ class TestDevelopmentHelper {
     try {
       final result = await Process.run('firebase', ['--version']);
       print('✅ Firebase CLI: ${result.stdout.toString().trim()}');
-    } catch (e) {
+    } on ProcessException {
       print('❌ Firebase CLI: Not found');
     }
 

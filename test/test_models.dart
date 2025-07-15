@@ -1,7 +1,9 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
+import 'package:meta/meta.dart';
 
 /// Test model for a simple user object
+@immutable
 class User {
   const User({
     required this.id,
@@ -10,12 +12,6 @@ class User {
     this.age,
     this.createdAt,
   });
-
-  final String id;
-  final String name;
-  final String email;
-  final int? age;
-  final DateTime? createdAt;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -29,6 +25,12 @@ class User {
               : null,
     );
   }
+
+  final String id;
+  final String name;
+  final String email;
+  final int? age;
+  final DateTime? createdAt;
 
   Map<String, dynamic> toJson() {
     return {
