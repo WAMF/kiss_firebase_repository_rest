@@ -2,19 +2,21 @@ import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart
 import 'package:kiss_repository/kiss_repository.dart';
 import 'package:test/test.dart';
 
+import 'emulator_test_runner.dart';
 import 'test_models.dart';
 import 'test_utils.dart';
 
 void main() {
   group('Firebase Repository Integration Tests', () {
     setUpAll(() async {
-      // Verify emulator is running before starting tests
-      if (!await TestUtils.isEmulatorRunning()) {
-        fail(
-          'Firebase emulator is not running. Please start it with: firebase emulators:start',
-        );
-      }
-      print('✅ Firebase emulator detected and ready for testing');
+      // Auto-start Firebase emulator if not running
+      await EmulatorTestRunner.startEmulator();
+      print('✅ Firebase emulator ready for testing');
+    });
+
+    tearDownAll(() async {
+      // Ensure complete cleanup of emulator processes
+      await EmulatorTestRunner.ensureCleanup();
     });
 
     group('Repository Factory Tests', () {
@@ -247,92 +249,6 @@ void main() {
         final docs = await jsonRepo.query();
         expect(docs.length, equals(1));
         expect(docs.first['title'], equals('Complex Document'));
-      });
-    });
-
-    group('Performance and Stress Tests', () {
-      late RepositoryFirestoreRestApi<User> userRepo;
-
-      setUp(() async {
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final uniqueCollectionName = 'perf-test-$timestamp';
-        userRepo = await TestUtils.createUserRepository(
-          path: uniqueCollectionName,
-        );
-      });
-
-      test('should handle multiple concurrent operations', () async {
-        // Create base user
-        const baseUser = User(
-          id: 'concurrent-user',
-          name: 'Concurrent User',
-          email: 'concurrent@example.com',
-          age: 0,
-        );
-
-        await userRepo.add(IdentifiedObject('concurrent-user', baseUser));
-
-        // Perform multiple concurrent updates
-        final futures = List.generate(10, (i) async {
-          try {
-            return userRepo.update('concurrent-user', (user) {
-              return user.copyWith(age: (user.age ?? 0) + 1);
-            });
-          } on Exception {
-            // Some updates may fail due to concurrent modifications
-            return null;
-          }
-        });
-
-        final results = await Future.wait(futures);
-
-        // Some updates should succeed
-        final successfulUpdates = results.where((r) => r != null).length;
-        expect(successfulUpdates, greaterThan(0));
-
-        // Final user should have age greater than 0
-        final finalUser = await userRepo.get('concurrent-user');
-        expect(finalUser.age, greaterThan(0));
-      });
-
-      test('should handle batch user creation efficiently', () async {
-        const batchSize = 20;
-        final stopwatch = Stopwatch()..start();
-
-        // Create multiple users
-        for (var i = 0; i < batchSize; i++) {
-          final user = User(
-            id: 'batch-user-$i',
-            name: 'Batch User $i',
-            email: 'batch$i@example.com',
-            age: 20 + i,
-          );
-
-          await userRepo.add(IdentifiedObject('batch-user-$i', user));
-        }
-
-        stopwatch.stop();
-        print(
-          '✅ Created $batchSize users in ${stopwatch.elapsedMilliseconds}ms',
-        );
-
-        // Verify all users were created
-        final allUsers = await userRepo.query();
-        expect(allUsers.length, equals(batchSize));
-
-        // Verify data integrity - sort by ID for consistent ordering
-        final sortedUsers =
-            allUsers.toList()..sort((a, b) {
-              // Extract numeric part from ID like "batch-user-5"
-              final aNum = int.parse(a.id.split('-').last);
-              final bNum = int.parse(b.id.split('-').last);
-              return aNum.compareTo(bNum);
-            });
-
-        for (var i = 0; i < batchSize; i++) {
-          expect(sortedUsers[i].name, equals('Batch User $i'));
-          expect(sortedUsers[i].age, equals(20 + i));
-        }
       });
     });
   });

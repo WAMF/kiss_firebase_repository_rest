@@ -6,17 +6,32 @@ import 'test_utils.dart';
 class EmulatorTestRunner {
   static Process? _emulatorProcess;
   static bool _isEmulatorStarted = false;
+  static bool _isStarting = false;
 
   /// Starts the Firebase emulator if not already running
   static Future<void> startEmulator() async {
+    // Prevent multiple simultaneous starts
+    if (_isStarting) {
+      print('📡 Firebase emulator is already starting, waiting...');
+      while (_isStarting) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
     if (_isEmulatorStarted || await TestUtils.isEmulatorRunning()) {
       print('📡 Firebase emulator is already running');
       return;
     }
 
-    print('🚀 Starting Firebase emulator...');
+    _isStarting = true;
 
     try {
+      // Check if Firebase CLI is installed first
+      await _checkFirebaseCLI();
+
+      print('🚀 Starting Firebase emulator...');
+
       // Start the emulator in the background
       _emulatorProcess = await Process.start('firebase', [
         'emulators:start',
@@ -36,6 +51,29 @@ class EmulatorTestRunner {
       print('💡 Make sure Firebase CLI is installed and configured');
       print('💡 Run: npm install -g firebase-tools');
       rethrow;
+    } finally {
+      _isStarting = false;
+    }
+  }
+
+  /// Checks if Firebase CLI is installed and throws an error if not
+  static Future<void> _checkFirebaseCLI() async {
+    try {
+      final result = await Process.run('firebase', ['--version']);
+      if (result.exitCode != 0) {
+        throw ProcessException(
+          'firebase',
+          ['--version'],
+          'Firebase CLI check failed',
+          result.exitCode,
+        );
+      }
+      print('🔧 Firebase CLI version: ${result.stdout.toString().trim()}');
+    } on ProcessException {
+      throw Exception(
+        'Firebase CLI is not installed or not in PATH.\n'
+        'Please install it with: npm install -g firebase-tools',
+      );
     }
   }
 
@@ -43,10 +81,42 @@ class EmulatorTestRunner {
   static Future<void> stopEmulator() async {
     if (_emulatorProcess != null) {
       print('🛑 Stopping Firebase emulator...');
+      
+      // Try graceful shutdown first
       _emulatorProcess!.kill();
+      
+      // Wait a bit for graceful shutdown
+      await Future<void>.delayed(const Duration(seconds: 2));
+      
+      // Force kill if still running
+      if (!_emulatorProcess!.kill(ProcessSignal.sigkill)) {
+        print('⚠️  Failed to kill emulator process, may still be running');
+      }
+      
       _emulatorProcess = null;
       _isEmulatorStarted = false;
+      _isStarting = false;
+      
       print('✅ Firebase emulator stopped');
+    }
+  }
+
+  /// Resets the emulator state (useful for testing)
+  static void resetState() {
+    _emulatorProcess = null;
+    _isEmulatorStarted = false;
+    _isStarting = false;
+  }
+
+  /// Ensures all emulator processes are cleaned up
+  static Future<void> ensureCleanup() async {
+    await stopEmulator();
+    
+    // Also try to kill any orphaned firebase processes
+    try {
+      await Process.run('pkill', ['-f', 'firebase emulators:start']);
+    } on ProcessException {
+      // Ignore if pkill fails (process might not exist)
     }
   }
 

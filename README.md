@@ -67,17 +67,31 @@ This package includes a comprehensive test suite that uses Firebase emulators fo
 
 ### Quick Test Setup
 
-Before running tests, verify your environment is ready:
+The tests now automatically start and manage Firebase emulators! Simply run:
 
 ```bash
-# Check if everything is properly set up
-./scripts/check_test_setup.sh
+# Run all tests (emulators will start automatically)
+dart test
 
-# If everything looks good, start testing
-./scripts/test_with_emulator.sh
+# Run only unit tests
+dart test test/unit/
+
+# Run only integration tests
+dart test test/integration/
 ```
 
-### Setting Up Firebase Emulator
+### Automatic Emulator Management
+
+The test suite now features **automatic emulator management**:
+
+- ✅ **Auto-start**: Firebase emulators start automatically when tests run
+- ✅ **Auto-stop**: Emulators are stopped when tests complete
+- ✅ **Error handling**: Clear error messages if Firebase CLI is not installed
+- ✅ **Smart detection**: Skips startup if emulators are already running
+
+### Manual Emulator Setup (Optional)
+
+If you prefer to manage emulators manually:
 
 1. **Initialize Firebase emulators** in your project:
    ```bash
@@ -96,7 +110,7 @@ Before running tests, verify your environment is ready:
 
 ### Running Tests
 
-Once the emulator is running, you can run the tests:
+Run tests with automatic emulator management:
 
 ```bash
 # Run all tests
@@ -127,19 +141,23 @@ test/
 
 ### Test Utilities
 
-The test suite includes helper utilities:
+The test suite includes helper utilities with automatic emulator management:
 
 ```dart
 import 'package:test/test.dart';
+import 'emulator_test_runner.dart';
 import 'test_utils.dart';
 
 void main() {
   group('My Tests', () {
     setUpAll(() async {
-      // Verify emulator is running
-      if (!await TestUtils.isEmulatorRunning()) {
-        fail('Firebase emulator is not running');
-      }
+      // Auto-start Firebase emulator if not running
+      await EmulatorTestRunner.startEmulator();
+    });
+
+    tearDownAll(() async {
+      // Stop emulator after all tests complete
+      await EmulatorTestRunner.stopEmulator();
     });
 
     setUp(() async {

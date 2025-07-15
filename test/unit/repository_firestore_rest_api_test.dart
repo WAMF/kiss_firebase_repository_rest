@@ -2,6 +2,7 @@ import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart
 import 'package:kiss_repository/kiss_repository.dart';
 import 'package:test/test.dart';
 
+import '../emulator_test_runner.dart';
 import '../test_models.dart';
 import '../test_utils.dart';
 
@@ -10,12 +11,13 @@ void main() {
     late Repository<User> repository;
 
     setUpAll(() async {
-      // Wait for emulator to be ready
-      if (!await TestUtils.isEmulatorRunning()) {
-        fail(
-          'Firebase emulator is not running. Please start it with: firebase emulators:start',
-        );
-      }
+      // Auto-start Firebase emulator if not running
+      await EmulatorTestRunner.startEmulator();
+    });
+
+    tearDownAll(() async {
+      // Ensure complete cleanup of emulator processes
+      await EmulatorTestRunner.ensureCleanup();
     });
 
     setUp(() async {
