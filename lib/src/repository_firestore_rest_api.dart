@@ -5,6 +5,7 @@ import 'package:kiss_repository/kiss_repository.dart';
 
 /// A function that converts an item of type T to a Firestore Document.
 typedef ToFirestore<T> = Document Function(T item, String? id);
+
 /// A function that converts a Firestore Document to an item of type T.
 typedef FromFirestore<T> = T Function(Document document);
 
@@ -13,12 +14,12 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   /// Creates a new RepositoryFirestoreRestApi instance.
   RepositoryFirestoreRestApi({
     required String projectId,
-    required String? database,
     required FirestoreApi firestore,
     required ToFirestore<T> toFirestore,
     required FromFirestore<T> fromFirestore,
     required String path,
     required QueryBuilder<RunQueryRequest> queryBuilder,
+    String? database,
     String Function()? createId,
   }) : _firestore = firestore,
        _database = database ?? 'projects/$projectId/databases/(default)',
@@ -34,6 +35,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   final FromFirestore<T> _fromFirestore;
   final QueryBuilder<RunQueryRequest> _queryBuilder;
   final String Function() _createId;
+
   /// Returns the base path for documents in the Firestore database.
   String get documentsPath => '$_database/documents';
 
@@ -90,8 +92,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
   @override
   Future<T> add(IdentifiedObject<T> item) async {
     try {
-      final document = _toFirestore(item.object, item.id)
-        ..name = null;
+      final document = _toFirestore(item.object, item.id)..name = null;
       final parent =
           collectionParentPath.isEmpty
               ? documentsPath
@@ -163,7 +164,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
             ? documentsPath
             : '$documentsPath/$collectionParentPath';
     final documentPath = '$parent/$collectionId/$id';
-    
+
     try {
       await _firestore.projects.databases.documents.get(documentPath);
     } catch (e) {
@@ -175,7 +176,7 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
       }
       rethrow;
     }
-    
+
     await _firestore.projects.databases.documents.delete(documentPath);
   }
 
@@ -299,17 +300,19 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
 
   @override
   Future<void> deleteAll(Iterable<String> ids) async {
-    await Future.wait(ids.map((id) async {
-      try {
-        await delete(id);
-      } on RepositoryException catch (e) {
-        if (e.code == RepositoryErrorCode.notFound) {
-          // Ignore not found errors for deleteAll
-          return;
+    await Future.wait(
+      ids.map((id) async {
+        try {
+          await delete(id);
+        } on RepositoryException catch (e) {
+          if (e.code == RepositoryErrorCode.notFound) {
+            // Ignore not found errors for deleteAll
+            return;
+          }
+          rethrow;
         }
-        rethrow;
-      }
-    }));
+      }),
+    );
   }
 
   @override

@@ -1,3 +1,8 @@
+## 0.2.2
+
+- Update kiss_repository_tests dependency to v0.3.1
+- Code formatting improvements
+
 ## 0.2.1
 
 - Implement automatic Firebase emulator management for tests
