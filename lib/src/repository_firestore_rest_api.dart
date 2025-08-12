@@ -163,6 +163,19 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
             ? documentsPath
             : '$documentsPath/$collectionParentPath';
     final documentPath = '$parent/$collectionId/$id';
+    
+    try {
+      await _firestore.projects.databases.documents.get(documentPath);
+    } catch (e) {
+      if (e is DetailedApiRequestError && e.status == 404) {
+        throw RepositoryException(
+          message: 'Item with id $id not found',
+          code: RepositoryErrorCode.notFound,
+        );
+      }
+      rethrow;
+    }
+    
     await _firestore.projects.databases.documents.delete(documentPath);
   }
 
@@ -286,7 +299,17 @@ class RepositoryFirestoreRestApi<T> extends Repository<T> {
 
   @override
   Future<void> deleteAll(Iterable<String> ids) async {
-    await Future.wait(ids.map(delete));
+    await Future.wait(ids.map((id) async {
+      try {
+        await delete(id);
+      } on RepositoryException catch (e) {
+        if (e.code == RepositoryErrorCode.notFound) {
+          // Ignore not found errors for deleteAll
+          return;
+        }
+        rethrow;
+      }
+    }));
   }
 
   @override

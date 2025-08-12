@@ -1,9 +1,5 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart' as http;
-import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
-import 'package:kiss_repository/kiss_repository.dart';
-
-import 'test_models.dart';
 
 /// Test utilities for Firebase emulator setup
 class TestUtils {
@@ -23,35 +19,6 @@ class TestUtils {
     return FirestoreApi(httpClient, rootUrl: '$emulatorUrl/');
   }
 
-  /// Creates a test repository for Users
-  static Future<RepositoryFirestoreRestApi<User>> createUserRepository({
-    String path = 'users',
-  }) async {
-    final firestore = await createEmulatorFirestoreApi();
-
-    return RepositoryFirestoreRestApi<User>(
-      projectId: testProjectId,
-      database: null,
-      firestore: firestore,
-      toFirestore: UserFirestoreConverters.toFirestore,
-      fromFirestore: UserFirestoreConverters.fromFirestore,
-      path: path,
-      queryBuilder: _TestQueryBuilder(collectionId: path),
-    );
-  }
-
-  /// Creates a test JSON repository
-  static Future<RepositoryFirestoreJsonRestApi> createJsonRepository({
-    String path = 'test-collection',
-  }) async {
-    final firestore = await createEmulatorFirestoreApi();
-
-    return RepositoryFirestoreJsonRestApi(
-      projectId: testProjectId,
-      firestore: firestore,
-      path: path,
-    );
-  }
 
   /// Clears all data from the emulator
   static Future<void> clearEmulatorData() async {
@@ -101,44 +68,4 @@ class TestUtils {
     );
   }
 
-  /// Creates sample test users
-  static List<User> createSampleUsers() {
-    return [
-      User(
-        id: 'user1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        age: 30,
-        createdAt: DateTime(2024),
-      ),
-      User(
-        id: 'user2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        age: 25,
-        createdAt: DateTime(2024, 1, 2),
-      ),
-      User(
-        id: 'user3',
-        name: 'Bob Johnson',
-        email: 'bob@example.com',
-        createdAt: DateTime(2024, 1, 3),
-      ),
-    ];
-  }
-}
-
-class _TestQueryBuilder implements QueryBuilder<RunQueryRequest> {
-  _TestQueryBuilder({required String collectionId})
-    : _collectionId = collectionId;
-  final String _collectionId;
-
-  @override
-  RunQueryRequest build(Query query) {
-    return RunQueryRequest(
-      structuredQuery: StructuredQuery(
-        from: [CollectionSelector(collectionId: _collectionId)],
-      ),
-    );
-  }
 }

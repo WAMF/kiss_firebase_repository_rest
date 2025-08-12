@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:test/test.dart';
 import 'test_utils.dart';
 
 /// Test runner that manages Firebase emulator lifecycle
@@ -164,37 +163,12 @@ void main() async {
     exit(1);
   }
 
-  setUpAll(() async {
-    await EmulatorTestRunner.startEmulator();
-  });
-
-  tearDownAll(() async {
-    await EmulatorTestRunner.cleanup();
-  });
-
-  group('All Firebase Repository Tests', () {
-    test('Emulator connectivity test', () async {
-      expect(await TestUtils.isEmulatorRunning(), isTrue);
-      print('✅ Emulator connectivity verified');
-    });
-
-    group('Repository Tests', () {
-      // Import and run individual test files
-      test('Run repository unit tests', () async {
-        // This would be replaced by importing actual test files
-        // For now, we'll just verify the setup
-        final repository = await TestUtils.createUserRepository();
-        expect(repository.path, equals('users'));
-        print('✅ Repository creation test passed');
-      });
-
-      test('Run JSON repository tests', () async {
-        final jsonRepo = await TestUtils.createJsonRepository();
-        expect(jsonRepo.path, equals('test-collection'));
-        print('✅ JSON repository creation test passed');
-      });
-    });
-  });
+  print('✅ Firebase emulator test runner setup complete');
+  print('');
+  print('To run tests:');
+  print('  dart test test/standardized/');
+  print('');
+  print('The emulator will be managed automatically by the test suite.');
 }
 
 /// Helper class for development and debugging
@@ -206,9 +180,8 @@ class TestDevelopmentHelper {
     print('================================');
     print('');
     print('📋 Available test commands:');
-    print('  dart test                    - Run all tests');
-    print('  dart test test/unit/         - Run unit tests only');
-    print('  dart test test/integration/  - Run integration tests only');
+    print('  dart test                        - Run all tests');
+    print('  dart test test/standardized/     - Run standardized repository tests');
     print('');
     print('🔧 Firebase Emulator URLs:');
     print('  UI:        http://127.0.0.1:4000');
