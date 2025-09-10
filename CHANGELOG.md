@@ -5,7 +5,6 @@
   - OAuth2 user consent flow for CLI tools via `GoogleClient.userConsent()`
   - Unauthenticated mode for emulator support via `GoogleClient.unauthenticated()`
   - Custom OAuth2 scopes support for all authentication methods
-for Firestore JSON I/O operations
 - Improve documentation with authentication examples
 
 ## 0.2.2
