@@ -1,3 +1,13 @@
+## 0.3.0
+
+- Add multiple authentication methods to GoogleClient:
+  - Application Default Credentials (ADC) support via `GoogleClient.defaultCredentials()`
+  - OAuth2 user consent flow for CLI tools via `GoogleClient.userConsent()`
+  - Unauthenticated mode for emulator support via `GoogleClient.unauthenticated()`
+  - Custom OAuth2 scopes support for all authentication methods
+for Firestore JSON I/O operations
+- Improve documentation with authentication examples
+
 ## 0.2.2
 
 - Update kiss_repository_tests dependency to v0.3.1

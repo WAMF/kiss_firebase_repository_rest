@@ -14,6 +14,9 @@ enum AuthMethod {
 
   /// Uses OAuth2 user consent flow for authentication.
   userConsent,
+
+  /// No authentication (for emulator or unauthenticated use).
+  unauthenticated,
 }
 
 /// A client for authenticating with Google Cloud services.
@@ -52,6 +55,15 @@ class GoogleClient {
         _clientId = ClientId(clientId, clientSecret),
         _scopes = scopes ?? _defaultScopes;
 
+  /// Creates a new GoogleClient for unauthenticated use.
+  /// This constructor returns an unauthenticated client suitable for
+  /// connecting to the Firestore emulator or other unauthenticated endpoints.
+  GoogleClient.unauthenticated()
+      : _credentials = null,
+        _authMethod = AuthMethod.unauthenticated,
+        _clientId = null,
+        _scopes = [];
+
   static const _defaultScopes = ['https://www.googleapis.com/auth/cloud-platform'];
 
   final dynamic _credentials;
@@ -63,6 +75,7 @@ class GoogleClient {
   List<String> get scopes => _scopes;
 
   /// Returns an authenticated HTTP client for making requests to Google Cloud services.
+  /// For emulator mode, returns an unauthenticated client.
   Future<http.Client> getClient() async {
     switch (_authMethod) {
       case AuthMethod.serviceAccount:
@@ -78,6 +91,9 @@ class GoogleClient {
           scopes,
           _promptUserForConsent,
         );
+      case AuthMethod.unauthenticated:
+        // Return a plain HTTP client for unauthenticated use
+        return http.Client();
     }
   }
 

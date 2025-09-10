@@ -1,5 +1,6 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart' as http;
+import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
 
 /// Test utilities for Firebase emulator setup
 class TestUtils {
@@ -9,9 +10,9 @@ class TestUtils {
 
   /// Creates a FirestoreApi that connects to the emulator
   static Future<FirestoreApi> createEmulatorFirestoreApi() async {
-    // For emulator testing, we don't need real authentication
-    // Create a simple HTTP client that works with the emulator
-    final httpClient = http.Client();
+    // Use the unauthenticated constructor for GoogleClient
+    final googleClient = GoogleClient.unauthenticated();
+    final httpClient = await googleClient.getClient();
 
     // Override the base URL to point to emulator
     const emulatorUrl = 'http://$emulatorHost:$emulatorPort';

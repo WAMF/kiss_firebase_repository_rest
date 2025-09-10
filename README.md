@@ -27,9 +27,28 @@ dependencies:
 ```dart
 import 'package:kiss_firebase_repository_rest/kiss_firebase_repository_rest.dart';
 
-// Create a Google client with service account credentials
-final client = GoogleClient(serviceAccountJson: serviceAccountJson);
-final httpClient = await client.getClient();
+// Choose an authentication method:
+
+// Option 1: Service Account (for server/backend applications)
+final googleClient = GoogleClient(
+  serviceAccountJson: serviceAccountJson,
+  scopes: ['https://www.googleapis.com/auth/datastore'], // Optional
+);
+
+// Option 2: Application Default Credentials (for Google Cloud environments)
+final googleClient = GoogleClient.defaultCredentials(
+  scopes: ['https://www.googleapis.com/auth/datastore'],
+);
+
+// Option 3: OAuth2 User Consent (for CLI tools)
+final googleClient = GoogleClient.userConsent(
+  clientId: 'your-client-id.apps.googleusercontent.com',
+  clientSecret: 'your-client-secret',
+  scopes: ['https://www.googleapis.com/auth/datastore'],
+);
+
+// Create Firestore client
+final httpClient = await googleClient.getClient();
 final firestore = FirestoreApi(httpClient);
 
 // Create a repository for your model
@@ -48,6 +67,62 @@ final user = User(name: 'John', email: 'john@example.com');
 final addedUser = await repository.addAutoIdentified(user);
 final retrievedUser = await repository.get(addedUser.id);
 ```
+
+## Authentication
+
+The `GoogleClient` class supports three authentication methods:
+
+### 1. Service Account (Recommended for servers)
+Best for backend services and applications running on servers.
+
+```dart
+final googleClient = GoogleClient(
+  serviceAccountJson: serviceAccountJson,
+  scopes: ['https://www.googleapis.com/auth/datastore'], // Optional, defaults to cloud-platform
+);
+```
+
+### 2. Application Default Credentials (ADC)
+Best for applications running in Google Cloud environments (App Engine, Cloud Run, GKE, etc.).
+
+```dart
+final googleClient = GoogleClient.defaultCredentials(
+  scopes: ['https://www.googleapis.com/auth/datastore'],
+);
+```
+
+When using ADC, credentials are automatically discovered from:
+- `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+- gcloud CLI credentials
+- Google Cloud service account (when running on Google Cloud)
+
+### 3. Unauthenticated (For emulators)
+Best for testing with Firestore emulators where authentication is not required.
+
+```dart
+final googleClient = GoogleClient.unauthenticated();
+// Use with FirestoreApi configured for emulator endpoint
+final firestore = FirestoreApi(
+  await googleClient.getClient(),
+  rootUrl: 'http://localhost:8080/', // Emulator URL
+);
+```
+
+### 4. OAuth2 User Consent (For CLI tools)
+Best for command-line tools where users need to authenticate with their Google account.
+
+```dart
+final googleClient = GoogleClient.userConsent(
+  clientId: 'your-client-id.apps.googleusercontent.com',
+  clientSecret: 'your-client-secret',
+  scopes: ['https://www.googleapis.com/auth/datastore'],
+);
+```
+
+Users will be prompted to visit a URL and grant permissions.
+
+### Custom Scopes
+All authentication methods support custom OAuth2 scopes. If not specified, the default scope is `https://www.googleapis.com/auth/cloud-platform`.
 
 ## Testing
 
