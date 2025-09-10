@@ -38,7 +38,6 @@ class ProductModelRepositoryFactory implements RepositoryFactory<ProductModel> {
     
     return RepositoryFirestoreRestApi<ProductModel>(
       projectId: 'test-project',
-      database: null,
       firestore: firestore,
       toFirestore: _productToFirestore,
       fromFirestore: _productFromFirestore,
